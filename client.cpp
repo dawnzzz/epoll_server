@@ -12,8 +12,8 @@
 const int PORT = 8080;
 const char* SERVER_IP = "127.0.0.1";
 const int NUM_THREADS = 16;       // 并发线程数
-const int REQUESTS_PER_THREAD = 100; // 每个线程的请求数
-const int MESSAGE_SIZE = 512;    // 每次发送的消息大小
+const int REQUESTS_PER_THREAD = 1000; // 每个线程的请求数
+const int MESSAGE_SIZE = 64;    // 每次发送的消息大小
 
 std::atomic<int> total_requests{0};
 std::atomic<int> successful_requests{0};
@@ -62,7 +62,6 @@ void client_thread(int thread_id) {
     
     // std::vector<char> packet(MESSAGE_SIZE);
     // memset(packet.data(), 'A', MESSAGE_SIZE);
-
     for (int i = 0; i < REQUESTS_PER_THREAD; ++i) {
 
         auto packet = generateRandomPackage(MESSAGE_SIZE);

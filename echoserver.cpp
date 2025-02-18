@@ -57,9 +57,9 @@ void EchoServer::onMessage(const std::shared_ptr<Connection> & conn){
     if (conn->State() == Connection::ConnectionState::Connected)
     {
         std::ostringstream oss;
-        // oss << CurrentThread::tid() << " Message from clent, length = " << conn->ReadBuffer()->Size();
+        // oss << "Message from client, length = " << conn->ReadBuffer()->size();
         // Logger.Info("EchoServer::onMessage", "", oss.str());
-        conn->Send(conn->ReadBuffer()->c_str(), conn->ReadBuffer()->Size());
+        conn->Send(conn->ReadBuffer()->data(), conn->ReadBuffer()->size());
         conn->HandleClose();
     }
 }

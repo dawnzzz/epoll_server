@@ -1,9 +1,10 @@
 #pragma once
-#include <cstddef>
 #include <functional>
 #include <memory>
+#include <vector>
 
 #include "eventloop.h"
+#include "tlvheader.h"
 
 
 class Buffer;
@@ -34,16 +35,16 @@ public:
     void SetMessageCallback(std::function<void(const std::shared_ptr<Connection> &)> const &fn); 
 
     // 设定send buf
-    void SetSendBuffer(const char *str, size_t); 
-    Buffer *ReadBuffer();
+    const std::vector<char> *ReadBuffer();
     Buffer *SendBuffer();
 
-    void Read(); // 读操作
-    void Write(); // 写操作
+
     void Send(const char *msg, size_t len);
 
 
     void HandleMessage(); // 当接收到信息时，进行回调
+
+    void HandleWrite();
 
     // 当TcpConnection发起关闭请求时，进行回调，释放相应的socket.
     void HandleClose(); 
@@ -52,6 +53,10 @@ public:
     ConnectionState State();
     EventLoop *Loop();
     int ClientFd();
+
+private:
+    void Read(); // 读操作
+    void Write(); // 写操作
 
 
 private:
@@ -64,8 +69,14 @@ private:
     EventLoop *event_loop;
 
     std::unique_ptr<Channel> channel;
-    std::unique_ptr<Buffer> read_buffer;
+    std::unique_ptr<std::vector<char>> read_buffer;
     std::unique_ptr<Buffer> send_buffer;
+
+    int read_tlv_header_length;
+    int read_body_length;
+    // std::unique_ptr<std::vector<char>> tlv_header_buffer;
+    std::unique_ptr<TLVHeader> tlv_header;
+    bool ready_to_handle_message;
 
     std::function<void(const std::shared_ptr<Connection> &)> on_close_callback;
     std::function<void(const std::shared_ptr<Connection> &)> on_message_callback;

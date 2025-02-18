@@ -44,7 +44,7 @@ void Channel::HandleEventWithGuard(){
 }
 
 void Channel::EnableET(){
-    listening_events |= (EPOLLET | EPOLLONESHOT);
+    listening_events |= (EPOLLET);
     event_loop->UpdateChannel(this);
 }
 

@@ -29,6 +29,7 @@ EventLoop::EventLoop() {
 
 EventLoop::~EventLoop() {
     DeleteChannel(wakeup_channel.get());
+    close(wakeup_event_fd);
 }
 
 void EventLoop::UpdateChannel(Channel* chan) {
@@ -82,7 +83,6 @@ void EventLoop::QueueOneFunc(std::function<void()> cb){
     if (!IsInLoopThread() || calling_funcs) {
         uint64_t write_one_byte = 1;  
         ssize_t write_size = write(wakeup_event_fd, &write_one_byte, sizeof(write_one_byte));
-        (void) write_size;
     } 
 }
 

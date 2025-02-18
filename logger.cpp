@@ -82,9 +82,13 @@ void LoggerInner::Log(LOG_LEVEL log_level, std::string name, const char  *err, s
         return;
     }
 
-    if (is_print_cout)
+    if (is_print_cout) {
         // 打印到控制台
+        
+        std::unique_lock<std::mutex> lock(mu);
         std::cout << "LEVEL[" << getLogLevelName(log_level) << "] thread[" << CurrentThread::gettid() << "] name[" << name << "]" << " err:" << err << " message: " <<  message << std::endl;
+        
+    }
     if (is_async && !async_thread_failed) {
         // 异步增加到缓冲区中
         {
@@ -102,7 +106,7 @@ void LoggerInner::Log(LOG_LEVEL log_level, std::string name, const char  *err, s
 }
 
 void LoggerInner::Debug(std::string name, const char  *err, std::string message) {
-    LOG_LEVEL log_level = LOG_LEVEL::INFO;
+    LOG_LEVEL log_level = LOG_LEVEL::DEBUG;
 
     Log(log_level, name, err, message);
 }
@@ -121,7 +125,7 @@ void LoggerInner::Info(std::string name, const char  *err, std::string message) 
 }
 
 void LoggerInner::Error(std::string name, const char* err, std::string message) {
-    LOG_LEVEL log_level = LOG_LEVEL::INFO;
+    LOG_LEVEL log_level = LOG_LEVEL::ERROR;
     // #if (_LOG_LEVEL == LOG_DEBUG)
     // log_level = LOG_LEVEL::DEBUG;
     // #elif (_LOG_LEVEL == LOG_ERROR)
@@ -134,7 +138,7 @@ void LoggerInner::Error(std::string name, const char* err, std::string message) 
 }
 
 void LoggerInner::Fatal(std::string name, const char  *err, std::string message) {
-    LOG_LEVEL log_level = LOG_LEVEL::INFO;
+    LOG_LEVEL log_level = LOG_LEVEL::FATAL;
     // #if (_LOG_LEVEL == LOG_DEBUG)
     // log_level = LOG_LEVEL::DEBUG;
     // #elif (_LOG_LEVEL == LOG_ERROR)
@@ -145,4 +149,5 @@ void LoggerInner::Fatal(std::string name, const char  *err, std::string message)
 
     Log(log_level, name, err, message);
     
+    std::terminate();
 }

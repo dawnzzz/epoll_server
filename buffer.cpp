@@ -1,22 +1,52 @@
-#include "buffer.h"
 #include <string>
+#include <cstring>
 
-const std::string &Buffer::buf() const { return buf_; }
+#include "buffer.h"
 
-const char *Buffer::c_str() const { return buf_.c_str(); }
+Buffer::Buffer() :
+    buffer_(DEFAULT_INIT_SIZE),
+    read_index_(0),
+    write_index_(0){}
 
-void Buffer::set_buf(const char *buf, size_t size) {
-  std::string new_buf(buf, size);
-  buf_.swap(new_buf);
+Buffer::~Buffer(){}
+
+char *Buffer::begin() { return &*buffer_.begin(); }
+const char *Buffer::begin() const { return &*buffer_.begin(); }
+char* Buffer::beginread() { return begin() + read_index_; } 
+const char* Buffer::beginread() const { return begin() + read_index_; }
+char* Buffer::beginwrite() { return begin() + write_index_; }
+const char* Buffer::beginwrite() const { return begin() + write_index_; }
+
+
+void Buffer::Append(const char* message, int len) {
+    EnsureWritableBytes(len);
+    std::copy(message, message + len, beginwrite());
+    write_index_ += len;
 }
 
-size_t Buffer::Size() const { return buf_.size(); }
 
-void Buffer::Append(const char *str, int size) {
-  for (int i = 0; i < size; ++i) {
+int Buffer::readablebytes() const { return write_index_ - read_index_; }
+int Buffer::writablebytes() const { return static_cast<int>(buffer_.size()) - write_index_; } 
 
-    buf_.push_back(str[i]);
-  }
+char *Buffer::Peek() { return beginread(); }
+const char *Buffer::Peek() const { return beginread(); }
+
+void Buffer::Retrieve(int len){
+    if(len + read_index_ < write_index_){
+        read_index_ += len;
+    }else{
+        RetrieveAll();
+    }
 }
 
-void Buffer::Clear() { buf_.clear(); }
+void Buffer::RetrieveAll(){
+    write_index_ = 0;
+    read_index_ = write_index_;
+}
+
+void Buffer::EnsureWritableBytes(int len){
+    if(writablebytes() >= len)
+        return;
+    
+    buffer_.resize(write_index_ + len);
+}
