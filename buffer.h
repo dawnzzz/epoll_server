@@ -1,27 +1,22 @@
 #pragma once
 
-#include <utility>
-#include <vector>
 #include <memory.h>
 #include <string>
-
-#include "bufferpool.h"
 
 class Buffer{
     public:
         Buffer() = default;
-        ~Buffer() {
-            BUFFER_POOL.return_buffer(std::move(buf_));
-        }
+        ~Buffer() = default;
 
-        std::vector<char> buf() const;
+        const std::string &buf() const;
+        const char *c_str() const;
 
-        void set_buf(std::vector<char>&& buf);
+        void set_buf(const char *buf, size_t size);
 
         size_t Size() const;
-        void Append(std::vector<char>, int size);
+        void Append(const char *_str, int _size);
         void Clear();
     
     private:
-        std::vector<char> buf_ = BUFFER_POOL.get_buffer();
+        std::string buf_;
 };

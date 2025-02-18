@@ -2,6 +2,7 @@
 
 #include "eventloop.h"
 #include "eventloopthread.h"
+#include <atomic>
 
 class EventLoopThreadPool {
 private:

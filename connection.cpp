@@ -78,12 +78,12 @@ void Connection::HandleMessage(){
 EventLoop *Connection::Loop() { return event_loop; }
 int Connection::ClientFd() { return client_fd; }
 Connection::ConnectionState Connection::State() { return state; }
-void Connection::SetSendBuffer(std::vector<char>&& str) { send_buffer->set_buf(std::move(str)); }
+void Connection::SetSendBuffer(const char *str, size_t size) { send_buffer->set_buf(str, size); }
 Buffer *Connection::ReadBuffer(){ return read_buffer.get(); }
 Buffer *Connection::SendBuffer() { return send_buffer.get(); }
 
-void Connection::Send(std::vector<char>&& msg){
-    SetSendBuffer(std::move(msg));
+void Connection::Send(const char *msg, size_t size){
+    SetSendBuffer(msg, size);
     // Logger.Debug("Connection::Send", "", "msg size = " + std::to_string(msg.size()) +" send_buffer size = " + std::to_string(send_buffer->Size()));
     Write();
 }
@@ -101,9 +101,10 @@ void Connection::Write(){
 
 
 void Connection::ReadNonBlocking(){
-    std::vector<char> buf = BUFFER_POOL.get_buffer();
+    char buf[1024];
+    // std::vector<char> buf = BUFFER_POOL.get_buffer();
     while(true){
-        ssize_t bytes_read = read(client_fd, buf.data(), buf.size());
+        ssize_t bytes_read = read(client_fd, buf, sizeof(buf));
         // Logger.Info("Connection::ReadNonBlocking", "", "read length "+ std::to_string(bytes_read));
         if(bytes_read > 0){
             read_buffer->Append(buf, bytes_read);
@@ -125,13 +126,13 @@ void Connection::ReadNonBlocking(){
 
 void Connection::WriteNonBlocking(){
     
-    std::vector<char> buf(send_buffer->buf());
+    char buf[send_buffer->Size()];
+    memcpy(buf, send_buffer->c_str(), send_buffer->Size());
     int data_size = send_buffer->Size();
     int data_left = data_size;
-
     while(data_left > 0){
         
-        ssize_t bytes_write = write(client_fd, buf.data() + data_size - data_left, data_left);
+        ssize_t bytes_write = write(client_fd, buf + data_size - data_left, data_left);
         // Logger.Debug("Connection::WriteNonBlocking", "", "write length "+ std::to_string(bytes_write));
         if(bytes_write == -1 && errno == EINTR){
             continue;

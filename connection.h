@@ -1,7 +1,7 @@
 #pragma once
+#include <cstddef>
 #include <functional>
 #include <memory>
-#include <string>
 
 #include "eventloop.h"
 
@@ -34,13 +34,13 @@ public:
     void SetMessageCallback(std::function<void(const std::shared_ptr<Connection> &)> const &fn); 
 
     // 设定send buf
-    void SetSendBuffer(std::vector<char>&& buf); 
+    void SetSendBuffer(const char *str, size_t); 
     Buffer *ReadBuffer();
     Buffer *SendBuffer();
 
     void Read(); // 读操作
     void Write(); // 写操作
-    void Send(std::vector<char>&& msg);
+    void Send(const char *msg, size_t len);
 
 
     void HandleMessage(); // 当接收到信息时，进行回调

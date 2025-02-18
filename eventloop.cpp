@@ -41,7 +41,7 @@ void EventLoop::DeleteChannel(Channel* chan) {
 
 
 void EventLoop::Start() {
-    std::ostringstream oss;
+    // std::ostringstream oss;
     
     while (true) {
         auto ready_channels = epoller->Epoll();

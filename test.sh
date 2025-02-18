@@ -20,5 +20,4 @@ while true; do
     # 执行命令
     eval $command
     # 可以根据需要添加适当的延迟，避免命令执行过于频繁
-    sleep 1
 done

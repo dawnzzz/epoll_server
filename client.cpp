@@ -11,9 +11,9 @@
 
 const int PORT = 8080;
 const char* SERVER_IP = "127.0.0.1";
-const int NUM_THREADS = 100;       // 并发线程数
+const int NUM_THREADS = 16;       // 并发线程数
 const int REQUESTS_PER_THREAD = 100; // 每个线程的请求数
-const int MESSAGE_SIZE = 64;    // 每次发送的消息大小
+const int MESSAGE_SIZE = 512;    // 每次发送的消息大小
 
 std::atomic<int> total_requests{0};
 std::atomic<int> successful_requests{0};
@@ -25,7 +25,7 @@ std::vector<char> generateRandomPackage(int length) {
         "0123456789"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz";
-    static int start = 0;
+    static std::atomic<int> start{0};
     TLVHeader header;
     header.type = htonl(TLVHEADER_TYPE::STRING);
     header.length = htonl(MESSAGE_SIZE);

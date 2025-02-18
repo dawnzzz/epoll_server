@@ -1,4 +1,8 @@
 **.o
-./eche_server
+echo_server
 ./client
+**.out
+**.out.**
 **.log
+nohup.out
+client

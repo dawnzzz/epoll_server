@@ -1,5 +1,4 @@
 
-#include <sstream>
 #include <string>
 #include <thread>
 #include <iostream>
@@ -46,9 +45,9 @@ void EchoServer::onConnection(const std::shared_ptr<Connection> & conn){
     socklen_t peer_addrlength = sizeof(peeraddr);
     getpeername(clnt_fd, (struct sockaddr *)&peeraddr, &peer_addrlength);
 
-    std::ostringstream oss;
-    oss << CurrentThread::tid()
-              << " EchoServer::OnNewConnection : new connection from " << inet_ntoa(peeraddr.sin_addr) << ":" << ntohs(peeraddr.sin_port);
+    // std::ostringstream oss;
+    // oss << CurrentThread::tid()
+    //           << " EchoServer::OnNewConnection : new connection from " << inet_ntoa(peeraddr.sin_addr) << ":" << ntohs(peeraddr.sin_port);
     // Logger.Debug("EchoServer::onConnection", "", oss.str());
 };
 
@@ -58,9 +57,9 @@ void EchoServer::onMessage(const std::shared_ptr<Connection> & conn){
     if (conn->State() == Connection::ConnectionState::Connected)
     {
         std::ostringstream oss;
-        oss << CurrentThread::tid() << " Message from clent, length = " << conn->ReadBuffer()->Size();
+        // oss << CurrentThread::tid() << " Message from clent, length = " << conn->ReadBuffer()->Size();
         // Logger.Info("EchoServer::onMessage", "", oss.str());
-        conn->Send(conn->ReadBuffer()->buf());
+        conn->Send(conn->ReadBuffer()->c_str(), conn->ReadBuffer()->Size());
         conn->HandleClose();
     }
 }
