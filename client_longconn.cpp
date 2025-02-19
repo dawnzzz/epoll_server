@@ -10,7 +10,7 @@
 #include "tlvheader.h"
 
 const int PORT = 8080;
-const char* SERVER_IP = "127.0.0.1";
+const char* SERVER_IP = "21.6.211.179";
 const int NUM_THREADS = 16;       // 并发线程数
 const int REQUESTS_PER_THREAD = 100000; // 每个线程的请求数
 const int MIN_MESSAGE_SIZE = 1;
