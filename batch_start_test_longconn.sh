@@ -15,9 +15,12 @@ pid_file="/tmp/test_longconn_pids"
 
 echo "正在启动 $num_processes 个 test_longconn.sh 进程..."
 
+# 创建日志目录
+mkdir -p "./log/${num_processes}"
+
 # 启动指定数量的进程，记录 PID 并保存日志到 test_x.log
 for ((i=1; i<=num_processes; i++)); do
-  log_file="test_${i}.log"
+  log_file="./log/${num_processes}/test_${i}.log"
   ./test_longconn.sh > "$log_file" 2>&1 &
   pid=$!
   echo "$pid" >> "$pid_file"

@@ -118,17 +118,11 @@ void client_thread(int thread_id) {
             close(sock);
             return;
         }
-
-        auto end_time = std::chrono::high_resolution_clock::now();
-        long long response_time = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
-
-        total_response_time += response_time;
         successful_requests++;
-        
-
-        
     }
-
+    auto end_time = std::chrono::high_resolution_clock::now();
+    long long response_time = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+    total_response_time += response_time;
     close(sock);
 }
 
