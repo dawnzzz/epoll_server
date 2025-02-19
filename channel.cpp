@@ -26,10 +26,6 @@ void Channel::Tie(const std::shared_ptr<void> &ptr){
 }
 
 void Channel::HandleEventWithGuard(){
-    if (ready_events  & (EPOLLERR | EPOLLRDHUP | EPOLLHUP) ) {
-        // 客户端关闭了连接
-
-    }
     if (ready_events & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)) {
         if (read_callback) {
             read_callback();

@@ -6,3 +6,5 @@ echo_server
 **.log
 nohup.out
 client
+perf.**
+client_longconn

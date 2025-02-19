@@ -9,7 +9,7 @@
 #include "channel.h"
 #include "logger.h"
 
-#define EVENT_NUM 1024
+#define EVENT_NUM 4096
 
 Epoller::Epoller() {
     epoll_fd = epoll_create1(0);

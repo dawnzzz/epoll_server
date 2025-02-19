@@ -40,6 +40,8 @@ public:
 
 
     void Send(const char *msg, size_t len);
+    void Send2(const char *msg, size_t len);
+    void SendWithTwoSysCall(const char *msg, size_t len);
 
 
     void HandleMessage(); // 当接收到信息时，进行回调
@@ -53,6 +55,8 @@ public:
     ConnectionState State();
     EventLoop *Loop();
     int ClientFd();
+
+    void SendInternal(const char *msg, size_t len);
 
 private:
     void Read(); // 读操作

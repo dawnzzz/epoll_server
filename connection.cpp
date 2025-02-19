@@ -147,6 +147,74 @@ void Connection::Send(const char *msg, size_t len){
     }
 }
 
+void Connection::Send2(const char *msg, size_t len){
+    // Logger.Info("Connection::Send", "", "msg size = " + std::to_string(len) +" send_buffer size = " + std::to_string(send_buffer->readablebytes()));
+
+    
+    int send_size = 0;
+
+    // 添加tlv头部
+    TLVHeader header;
+    header.type = htonl(TLVHEADER_TYPE::STRING);
+    header.length = htonl(len);    
+
+    send_buffer->Append((char *)&header, TLV_HEADER_LENGTH);
+    send_buffer->Append(msg, len);
+
+    // 注册写事件
+    channel->EnableWrite();
+}
+
+void Connection::SendWithTwoSysCall(const char *msg, size_t len){
+    Logger.Info("Connection::SendWithTwoSysCall", "", "msg size = " + std::to_string(len) +" send_buffer size = " + std::to_string(send_buffer->readablebytes()));
+
+    // 添加tlv头部
+    TLVHeader header;
+    header.type = htonl(TLVHEADER_TYPE::STRING);
+    header.length = htonl(len);
+
+    Logger.Info("Connection::SendWithTwoSysCall", "", "header.length = " + std::to_string(ntohl(header.length)));
+    
+    SendInternal((char*)&header, TLV_HEADER_LENGTH);
+    SendInternal(msg, len);
+}
+
+
+void Connection::SendInternal(const char *msg, size_t len){
+    Logger.Info("Connection::SendInternal", "", "msg size = " + std::to_string(len) +" send_buffer size = " + std::to_string(send_buffer->readablebytes()));
+
+    
+    int send_size = 0;
+    int response_len = len;
+    int remaining = response_len;
+
+    if (send_buffer->readablebytes() == 0){
+        send_size = write(client_fd, msg, response_len);
+        Logger.Info("Connection::SendInternal", "", "send_size = " + std::to_string(send_size));
+        if(send_size >= 0){
+            // 说明发送了部分数据
+            remaining -= send_size;
+        } else if((send_size == -1) && 
+                    ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == EINTR))){
+            Logger.Error("Connection::SendInternal", strerror(errno), "send again");
+            send_size = 0;
+        } else{
+            Logger.Error("Connection::SendInternal", strerror(errno), "send failed");
+            HandleClose();
+            return;
+        }
+    }
+
+    // Logger.Info("Connection::Send", "", "remaining = " + std::to_string(remaining));
+    // 剩余数据放入send buffer
+    if(remaining > 0){
+        send_buffer->Append(msg + send_size, remaining);
+
+        // 注册写事件
+        channel->EnableWrite();
+    }
+}
+
 void Connection::Read()
 {
     ReadNonBlocking();
@@ -215,12 +283,15 @@ void Connection::ReadNonBlocking(){
                 Logger.Info("Connection::ReadNonBlocking", strerror(errno), "read again");
                 break;
             }else if (bytes_read == 0){//
-                Logger.Info("Connection::ReadNonBlocking", strerror(errno), "read bytes == 0");
+                Logger.Debug("Connection::ReadNonBlocking", strerror(errno), "read bytes == 0");
+                if (read_body_length == tlv_header->length) {
+                    ready_to_handle_message = true;
+                    break;
+                }
                 HandleClose();
                 break;
             }else{
                 Logger.Error("Connection::ReadNonBlocking", strerror(errno), "read failed");
-                Logger.Error("Connection::ReadNonBlocking", strerror(errno), "read failed" + std::to_string(read_buffer->size())+ ":" + std::string(read_buffer->begin(), read_buffer->end()));
                 HandleClose();
                 break;
             }

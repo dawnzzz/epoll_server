@@ -12,9 +12,9 @@
 const int PORT = 8080;
 const char* SERVER_IP = "127.0.0.1";
 const int NUM_THREADS = 16;       // 并发线程数
-const int REQUESTS_PER_THREAD = 100; // 每个线程的请求数
-const int MIN_MESSAGE_SIZE = 256;
-const int MAX_MESSAGE_SIZE = 512;    // 每次发送的消息大小
+const int REQUESTS_PER_THREAD = 100000; // 每个线程的请求数
+const int MIN_MESSAGE_SIZE = 1;
+const int MAX_MESSAGE_SIZE = 256;    // 每次发送的消息大小
 
 std::atomic<int> total_requests{0};
 std::atomic<int> successful_requests{0};
@@ -66,36 +66,36 @@ void client_thread(int thread_id) {
     static int ms{MIN_MESSAGE_SIZE};
     // std::vector<char> packet(MESSAGE_SIZE);
     // memset(packet.data(), 'A', MESSAGE_SIZE);
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock == -1) {
+        std::cerr << "Thread " << thread_id << ": Failed to create socket: " << strerror(errno) << std::endl;
+    }
+
+    sockaddr_in server_addr{};
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(PORT);
+    if (inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr) <= 0) {
+        std::cerr << "Thread " << thread_id << ": Invalid address/Address not supported: " << SERVER_IP << std::endl;
+        close(sock);
+    }
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    if (connect(sock, (sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        std::cerr << "Thread " << thread_id << ": Connection failed: " << strerror(errno) << std::endl;
+        close(sock);
+    }
+
+    total_requests+= REQUESTS_PER_THREAD;
+
+
     for (int i = 0; i < REQUESTS_PER_THREAD; ++i) {
         int MESSAGE_SIZE = ms % MAX_MESSAGE_SIZE;
         ms++;
         auto packet = generateRandomPackage(MESSAGE_SIZE);
         auto hash = hashVector(packet);
         // std::cout << packet.size() << std::endl;
-        total_requests++;
-        int sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (sock == -1) {
-            std::cerr << "Thread " << thread_id << ": Failed to create socket: " << strerror(errno) << std::endl;
-            continue;
-        }
-
-        sockaddr_in server_addr{};
-        server_addr.sin_family = AF_INET;
-        server_addr.sin_port = htons(PORT);
-        if (inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr) <= 0) {
-            std::cerr << "Thread " << thread_id << ": Invalid address/Address not supported: " << SERVER_IP << std::endl;
-            close(sock);
-            continue;
-        }
-
-        auto start_time = std::chrono::high_resolution_clock::now();
-
-        if (connect(sock, (sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-            std::cerr << "Thread " << thread_id << ": Connection failed: " << strerror(errno) << std::endl;
-            close(sock);
-            continue;
-        }
-
+        
         // 发送数据
         if (write(sock, packet.data(), MESSAGE_SIZE+TLV_HEADER_LENGTH) != MESSAGE_SIZE+TLV_HEADER_LENGTH) {
             std::cerr << "Thread " << thread_id << ": Write failed: " << strerror(errno) << std::endl;
@@ -124,8 +124,10 @@ void client_thread(int thread_id) {
         successful_requests++;
         
 
-        close(sock);
+        
     }
+
+    close(sock);
 }
 
 int main() {
