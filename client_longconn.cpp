@@ -63,30 +63,32 @@ char hashVector(const std::vector<char>& input) {
 
 
 void client_thread(int thread_id) {
+    total_requests += REQUESTS_PER_THREAD;
     static int ms{MIN_MESSAGE_SIZE};
     // std::vector<char> packet(MESSAGE_SIZE);
     // memset(packet.data(), 'A', MESSAGE_SIZE);
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == -1) {
-        std::cerr << "Thread " << thread_id << ": Failed to create socket: " << strerror(errno) << std::endl;
+        // std::cerr << "Thread " << thread_id << ": Failed to create socket: " << strerror(errno) << std::endl;
+        return;
     }
 
     sockaddr_in server_addr{};
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT);
     if (inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr) <= 0) {
-        std::cerr << "Thread " << thread_id << ": Invalid address/Address not supported: " << SERVER_IP << std::endl;
+        // std::cerr << "Thread " << thread_id << ": Invalid address/Address not supported: " << SERVER_IP << std::endl;
         close(sock);
+        return;
     }
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
     if (connect(sock, (sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        std::cerr << "Thread " << thread_id << ": Connection failed: " << strerror(errno) << std::endl;
+        // std::cerr << "Thread " << thread_id << ": Connection failed: " << strerror(errno) << std::endl;
         close(sock);
+        return;
     }
-
-    total_requests+= REQUESTS_PER_THREAD;
 
 
     for (int i = 0; i < REQUESTS_PER_THREAD; ++i) {
@@ -98,9 +100,9 @@ void client_thread(int thread_id) {
         
         // 发送数据
         if (write(sock, packet.data(), MESSAGE_SIZE+TLV_HEADER_LENGTH) != MESSAGE_SIZE+TLV_HEADER_LENGTH) {
-            std::cerr << "Thread " << thread_id << ": Write failed: " << strerror(errno) << std::endl;
+            // std::cerr << "Thread " << thread_id << ": Write failed: " << strerror(errno) << std::endl;
             close(sock);
-            continue;
+            return;
         }
         // std::cout << packet.size() << std::endl;
 
@@ -112,9 +114,9 @@ void client_thread(int thread_id) {
         // 长度 & 哈希校验
         // std::cout << bytes_received << received_hash << hash << std::endl;
         if (bytes_received != MESSAGE_SIZE+TLV_HEADER_LENGTH || hash != received_hash) {
-            std::cerr << "Thread " << thread_id << ": Read failed or incomplete: " << strerror(errno) << std::endl;
+            // std::cerr << "Thread " << thread_id << ": Read failed or incomplete: " << strerror(errno) << std::endl;
             close(sock);
-            continue;
+            return;
         }
 
         auto end_time = std::chrono::high_resolution_clock::now();
